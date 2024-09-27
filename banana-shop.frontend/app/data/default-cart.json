@@ -1,0 +1,19 @@
+{
+    "items": {
+        "item-00001": {
+            "id": "item-00001",
+            "name": "The Best Banana In The World",
+            "price": 3.5,
+            "quantity": 0
+        },
+        "item-00002": {
+            "id": "item-00002",
+            "name": "The Secret Banana",
+            "price": 5,
+            "quantity": 0
+        }
+    },
+    "subtotal": 0,
+    "shipping": 0,
+    "total": 0
+}

@@ -1,0 +1,72 @@
+[
+    {
+        "header": "Calories",
+        "text": "105kcal",
+        "x": -8,
+        "start": -293,
+        "end": 177
+    },
+    {
+        "header": "Carbohydrates",
+        "text": "27g",
+        "x": 25,
+        "start": -84,
+        "end": 94
+    },
+    {
+        "header": "Manganese",
+        "text": "0.319mg (14% of DV)",
+        "x": -10,
+        "start": -147,
+        "end": -13
+    },
+    {
+        "header": "Copper",
+        "text": "0.092mg (10% of DV)",
+        "x": 20,
+        "start": -279,
+        "end": 256
+    },
+    {
+        "header": "Potassium",
+        "text": "422mg (9% of DV)",
+        "x": -27,
+        "start": 104,
+        "end": -199
+    },
+    {
+        "header": "Magnesium",
+        "text": "31.9mg (8% of DV)",
+        "x": 27,
+        "start": -24,
+        "end": 213
+    },
+    {
+        "header": "Riboflavin",
+        "text": "0.086mg (7% of DV)",
+        "x": -22,
+        "start": -166,
+        "end": -273
+    },
+    {
+        "header": "Vitamin B6",
+        "text": "0.433mg (25% of DV)",
+        "x": -23,
+        "start": 239,
+        "end": -70
+    },
+    {
+        "header": "Folate",
+        "text": "23.6mcg (6% of DV)",
+        "x": 26,
+        "start": -49,
+        "end": -183
+    },
+    {
+        "header": "Vitamin C",
+        "text": "10.3mg (11% of DV)",
+        "x": 0,
+        "start": 160,
+        "end": 21
+    }
+]
