@@ -401,3 +401,10 @@ FodyWeavers.xsd
 /.cache
 /build
 .env
+
+/banana-shop.frontend/public/build
+/banana-shop.frontend/build
+
+# Local Netlify folder
+.netlify
+.DS_Store
