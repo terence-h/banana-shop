@@ -13,4 +13,10 @@ public class SalesOrderController(ISalesOrderService salesOrderService) : Contro
     {
         return await salesOrderService.GetSalesOrdersAsync();
     }
+
+    [HttpGet("{id}")]
+    public async Task<SalesOrder> GetSaleOrderAsync(string id)
+    {
+        return await salesOrderService.GetSaleOrderAsync(id);
+    }
 }

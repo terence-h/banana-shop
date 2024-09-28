@@ -14,14 +14,13 @@ public class SalesOrder
 
     [BsonElement("status")]
     public required int Status { get; set; }
-}
 
+    public class Item
+    {
+        // Not a field in MongoDB
+        public string? Name { get; set; }
 
-public class Item
-{
-    // [BsonElement("id")]
-    // public required string Id { get; set; }
-
-    [BsonElement("quantity")]
-    public required int Quantity { get; set; }
+        [BsonElement("quantity")]
+        public required int Quantity { get; set; }
+    }
 }
