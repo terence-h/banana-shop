@@ -47,7 +47,7 @@ export default function Navbar() {
     }
 
     return (
-        <nav className={`w-full fixed top-0 ${isOpen ? "bg-yellow-400/80" : "bg-transparent"} md:bg-white/60 md:dark:bg-gray-950/20 z-50`}>
+        <nav className={`w-screen fixed top-0 ${isOpen ? "bg-yellow-400/80" : "bg-transparent"} md:bg-white/60 md:dark:bg-gray-950/20 z-50`}>
             <div className="flex justify-between items-center px-4 py-2">
                 <motion.ul ref={listRef}
                     onPointerLeave={() => {

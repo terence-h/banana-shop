@@ -10,3 +10,7 @@ body {
     color-scheme: dark;
   }
 }
+
+* {
+  outline: 1px solid red;
+}
