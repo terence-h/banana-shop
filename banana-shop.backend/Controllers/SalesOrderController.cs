@@ -15,8 +15,14 @@ public class SalesOrderController(ISalesOrderService salesOrderService) : Contro
     }
 
     [HttpGet("{id}")]
-    public async Task<SalesOrder> GetSaleOrderAsync(string id)
+    public async Task<SalesOrder> GetSalesOrderAsync(string id)
     {
-        return await salesOrderService.GetSaleOrderAsync(id);
+        return await salesOrderService.GetSalesOrderAsync(id);
+    }
+
+    [HttpPost]
+    public async Task<string> CreateSalesOrder([FromBody] SalesOrder salesOrder)
+    {
+        return await salesOrderService.CreateSalesOrderAsync(salesOrder);
     }
 }

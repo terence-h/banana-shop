@@ -8,34 +8,32 @@ namespace banana_shop.backend.Services;
 
 public class SalesOrderService : ISalesOrderService
 {
+    private readonly IItemService itemService;
     private readonly IMongoCollection<SalesOrder> salesOrderCollection;
-    private readonly IMongoCollection<Item> itemsCollection;
 
-    public SalesOrderService(IOptions<MongoDBSettings> mongoDBSettings)
+    public SalesOrderService(IOptions<MongoDBSettings> mongoDBSettings, IItemService itemService)
     {
         MongoClient client = new(mongoDBSettings.Value.ConnectionURI);
         IMongoDatabase database = client.GetDatabase(mongoDBSettings.Value.DatabaseName);
         salesOrderCollection = database.GetCollection<SalesOrder>(mongoDBSettings.Value.CollectionName["sales_order"]);
-        itemsCollection = database.GetCollection<Item>(mongoDBSettings.Value.CollectionName["items"]);
+        // itemsCollection = database.GetCollection<Item>(mongoDBSettings.Value.CollectionName["items"]);
+        this.itemService = itemService;
     }
 
-    public Task<ObjectId> CreateSalesOrderAsync(SalesOrder salesOrder)
+    public async Task<string> CreateSalesOrderAsync(SalesOrder salesOrder)
     {
-        throw new NotImplementedException();
+        await salesOrderCollection.InsertOneAsync(salesOrder);
+        return salesOrder.Id ?? "Error";
     }
 
-    public Task<ObjectId> DeleteSalesOrderAsync(string id)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<SalesOrder> GetSaleOrderAsync(string id)
+    public async Task<SalesOrder> GetSalesOrderAsync(string id)
     {
         if (ObjectId.TryParse(id, out ObjectId objectId))
         {
             var filter = Builders<SalesOrder>.Filter.Eq("_id", objectId);
             var salesOrder = await salesOrderCollection.Find(filter).FirstOrDefaultAsync();
-            var items = await itemsCollection.Find(new BsonDocument()).ToListAsync();
+            // var items = await itemsCollection.Find(new BsonDocument()).ToListAsync();
+            var items = await itemService.GetItemsAsync();
 
             if (salesOrder == null)
             {
