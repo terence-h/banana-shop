@@ -1,6 +1,6 @@
-import { MetaFunction } from "@remix-run/react";
+import { Form, MetaFunction, redirect, useActionData } from "@remix-run/react";
 import { ReactLenis } from "@studio-freight/react-lenis";
-import { FormEvent, PointerEventHandler, useEffect, useState } from "react";
+import { ChangeEvent, ChangeEventHandler, PointerEventHandler, useEffect, useState } from "react";
 import { GetItemsInCart, ModifyItemQuantity, Cart, GetTotalAndShipping, Item } from "../hooks/useCart";
 
 export const meta: MetaFunction = () => {
@@ -10,7 +10,56 @@ export const meta: MetaFunction = () => {
     ];
 };
 
+export async function action({ request }: { request: Request }) {
+    const formData = await request.formData();
+    const itemsJson = JSON.parse(formData.get("items") as string) as { [key: string]: { quantity: number } };
+    const cartItems = Object.entries(itemsJson);
+    const items: { [key: string]: { quantity: number } } = {};
+
+    cartItems.forEach(([key, value]) => {
+        items[key] = { quantity: value.quantity }
+    });
+
+    const customerDetails = {
+        name: formData.get("name") as string,
+        address: formData.get("address") as string,
+        apartment: formData.get("apartment") as string,
+        city: formData.get("city") as string,
+        state: formData.get("state") as string,
+        postcode: parseInt(formData.get("postcode")!.toString()),
+        phone: parseInt(formData.get("phone")!.toString()),
+        email: formData.get("email")
+    };
+
+    const data = {
+        id: null,
+        items,
+        customerDetails,
+        subtotal: parseFloat(formData.get("subtotal")!.toString()),
+        shippingCost: parseFloat(formData.get("shippingCost")!.toString()),
+        status: 0,
+    };
+
+    const response = await fetch('http://localhost:5066/api/SalesOrder', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        return { error: "Failed to create the order" };
+    }
+
+    const orderId = await response.text();
+
+    return redirect(`/order/${orderId}`)
+}
+
 export default function Index() {
+    const actionData = useActionData<ActionData>();
+
     const [cart, setCart] = useState<Cart>();
     const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
         name: "",
@@ -18,49 +67,17 @@ export default function Index() {
         apartment: "",
         city: "",
         state: "",
-        postcode: "",
+        postCode: "",
         phone: "",
         email: ""
     });
 
-    function handleFormChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    function handleFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
         const { name, value } = e.target;
         setCustomerDetails(prevState => ({
             ...prevState,
             [name]: value
         }));
-    }
-
-    async function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-
-        const cartItems = Object.entries(cart!.items);
-        const items: { [key: string]: { quantity: number } } = {};
-
-        cartItems.forEach(([key, value]) => {
-            items[key] = { quantity: value.quantity }
-        });
-
-        const data = {
-            id: null,
-            items,
-            customerDetails,
-            status: 0
-        }
-
-        console.log(data);
-
-        await fetch('http://localhost:5066/api/SalesOrder', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        }).then(resp => {
-            console.log(resp);
-        }).catch(e => {
-            console.log(e);
-        });
     }
 
     useEffect(() => {
@@ -132,7 +149,7 @@ export default function Index() {
                         </div> */}
                     </div>
                     {cart &&
-                        <CartForm cart={cart} customerDetails={customerDetails} handleFormSubmit={handleFormSubmit} handleFormChange={handleFormChange} />
+                        <CartForm cart={cart} customerDetails={customerDetails} handleFormChange={handleFormChange} actionData={actionData} />
                     }
                 </div>
             </div>
@@ -188,30 +205,33 @@ function CartItem({ id, name, price, quantity, maxQuantityPerOrder, onAddQuantit
     );
 }
 
-function CartForm({ cart, customerDetails, handleFormSubmit, handleFormChange }: CartFormProps) {
+function CartForm({ cart, customerDetails, handleFormChange, actionData }: CartFormProps) { // handleFormSubmit
     return (
-        <form onSubmit={handleFormSubmit}>
+        <Form method="post">
+            <input required type="hidden" name="items" id="items" value={JSON.stringify(cart.items)} />
+            <input required type="hidden" name="subtotal" id="subtotal" value={cart.subtotal} />
+            <input required type="hidden" name="shippingCost" id="shippingCost" value={cart.shipping} />
             <h2 className="text-2xl font-extrabold text-white mix-blend-difference ">Payment Details</h2>
             <div className="grid gap-4 mt-8">
                 <div>
                     <label htmlFor="name" className="block text-base font-semibold text-white mix-blend-difference mb-2">Name<span className="text-yellow-400">*</span></label>
                     <input required type="text" name="name" id="name" autoComplete="name" placeholder="John Doe"
                         value={customerDetails.name}
-                        onChange={handleFormChange}
+                        onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                         className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                 </div>
                 <div>
                     <label htmlFor="address" className="block text-base font-semibold text-white mix-blend-difference mb-2">Address<span className="text-yellow-400">*</span></label>
                     <textarea required name="address" id="address" rows={4} autoComplete="address-line1" placeholder="Blk 123 Eunos St 45"
                         value={customerDetails.address}
-                        onChange={handleFormChange}
+                        onChange={handleFormChange as ChangeEventHandler<HTMLTextAreaElement>}
                         className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                 </div>
                 <div>
                     <label htmlFor="apartment" className="block text-base font-semibold text-white mix-blend-difference mb-2">Apartment No.</label>
                     <input type="text" name="apartment" id="apartment" autoComplete="address-line2" placeholder="#02-345"
                         value={customerDetails.apartment}
-                        onChange={handleFormChange}
+                        onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                         className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -219,14 +239,14 @@ function CartForm({ cart, customerDetails, handleFormSubmit, handleFormChange }:
                         <label htmlFor="city" className="block text-base font-semibold text-white mix-blend-difference mb-2">City</label>
                         <input type="text" name="city" id="city" placeholder="Los Angeles"
                             value={customerDetails.city}
-                            onChange={handleFormChange}
+                            onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                             className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
                     <div>
                         <label htmlFor="state" className="block text-base font-semibold text-white mix-blend-difference mb-2">State</label>
                         <input type="text" name="state" id="state" placeholder="California"
                             value={customerDetails.state}
-                            onChange={handleFormChange}
+                            onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                             className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
                 </div>
@@ -235,15 +255,15 @@ function CartForm({ cart, customerDetails, handleFormSubmit, handleFormChange }:
                     <div>
                         <label htmlFor="postcode" className="block text-base font-semibold text-white mix-blend-difference mb-2">Postal/Zip Code<span className="text-yellow-400">*</span></label>
                         <input required type="number" name="postcode" id="postcode" placeholder="123456"
-                            value={customerDetails.postcode}
-                            onChange={handleFormChange}
+                            value={customerDetails.postCode}
+                            onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                             className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
                     <div>
                         <label htmlFor="phone" className="block text-base font-semibold text-white mix-blend-difference mb-2">Phone No.<span className="text-yellow-400">*</span></label>
                         <input required type="number" name="phone" id="phone" placeholder="83457645"
                             value={customerDetails.phone}
-                            onChange={handleFormChange}
+                            onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                             className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
                 </div>
@@ -252,7 +272,7 @@ function CartForm({ cart, customerDetails, handleFormSubmit, handleFormChange }:
                     <label htmlFor="email" className="block text-base font-semibold text-white mix-blend-difference mb-2">E-mail<span className="text-yellow-400">*</span></label>
                     <input required type="email" name="email" id="email" placeholder="johndoe@gmail.com"
                         value={customerDetails.email}
-                        onChange={handleFormChange}
+                        onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                         className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                 </div>
 
@@ -292,14 +312,15 @@ function CartForm({ cart, customerDetails, handleFormSubmit, handleFormChange }:
                 <li className="flex flex-wrap gap-4 text-sm font-bold">Total <span className="ml-auto">${cart.total.toFixed(2) ?? 0}</span></li>
             </ul>
 
+            {actionData?.error && <p style={{ color: "red" }}>{actionData.error}</p>}
+
             <button type="submit"
                 className="mt-8 text-sm px-4 py-3 w-full font-semibold tracking-wide bg-yellow-400 text-white rounded-md disabled:bg-gray-800"
-                // onPointerDown={(e) => cart.subtotal > 0 && OnSubmit(e)}
                 disabled={cart.subtotal == 0}
             >
                 <span className="mix-blend-difference">Make Payment</span>
             </button>
-        </form>
+        </Form>
     );
 }
 
@@ -311,17 +332,21 @@ interface CartItemProps extends Item {
 interface CartFormProps {
     cart: Cart;
     customerDetails: CustomerDetails;
-    handleFormSubmit: any;
-    handleFormChange: any;
+    handleFormChange: ChangeEventHandler<HTMLInputElement> | ChangeEventHandler<HTMLTextAreaElement>;
+    actionData: ActionData | undefined;
 }
 
-interface CustomerDetails {
+export interface CustomerDetails {
     name: string;
     address: string;
     apartment?: string;
     city?: string;
     state?: string;
-    postcode: string;
+    postCode: string;
     phone: string;
     email: string;
+}
+
+interface ActionData {
+    error?: string;
 }
