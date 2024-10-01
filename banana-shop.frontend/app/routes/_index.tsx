@@ -1,11 +1,11 @@
 import type { MetaFunction } from "@remix-run/node";
 import { ReactLenis } from "@studio-freight/react-lenis";
-import CartButton from "~/components/cart-button";
-import Contact from "~/components/contact";
-import Details from "~/components/details";
-import Navbar from "~/components/navbar";
-import Overview from "~/components/overview";
-import useMobile from "~/hooks/useMobile";
+import CartButton from "../components/cart-button";
+import Contact from "../components/contact";
+import Details from "../components/details";
+import Navbar from "../components/navbar";
+import Overview from "../components/overview";
+import useMobile from "../hooks/useMobile";
 
 export const meta: MetaFunction = () => {
   return [
@@ -24,9 +24,9 @@ export default function Index() {
       </header>
       <ReactLenis root>
         <main>
-          <Overview className="h-screen w-screen" isMobile={isMobile} />
-          <Details className="relative h-[500vh] w-screen" isMobile={isMobile} />
-          <Contact className="h-screen mx-auto" />
+          <Overview className="h-screen w-full" isMobile={isMobile} />
+          <Details className="relative h-[500vh] w-full" isMobile={isMobile} />
+          <Contact className="h-screen w-full mx-auto" />
         </main>
       </ReactLenis>
       <footer>

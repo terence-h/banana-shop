@@ -1,13 +1,13 @@
 {
     "items": {
-        "item-00001": {
-            "id": "item-00001",
+        "1": {
+            "id": "1",
             "name": "The Best Banana In The World",
             "price": 3.5,
             "quantity": 0
         },
-        "item-00002": {
-            "id": "item-00002",
+        "2": {
+            "id": "2",
             "name": "The Secret Banana",
             "price": 5,
             "quantity": 0

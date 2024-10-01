@@ -47,7 +47,7 @@ function BackgroundImage({ isMobile }) {
 
 function ParallaxContent({ isMobile }) {
     return (
-        <div className="mx-auto">
+        <div className="mx-auto w-fit h-fit">
             {nutritionInfos.map((info) => {
                 return (
                     <NutritionInfo key={info.header} header={info.header} x={info.x} start={info.start} end={info.end}
