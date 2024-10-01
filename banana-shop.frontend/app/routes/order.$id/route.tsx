@@ -37,7 +37,7 @@ export default function Index() {
 }
 
 export async function loader({ params }: LoaderFunctionArgs) {
-    const response = await fetch(`http://localhost:5066/api/SalesOrder/${params.id}`);
+    const response = await fetch(`${process.env.API_URL}/SalesOrder/${params.id}`);
 
     if (!response.ok) {
         throw new Response("Not Found", { status: 404 });

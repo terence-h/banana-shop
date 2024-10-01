@@ -1,13 +1,19 @@
-import { Form, MetaFunction, redirect, useActionData } from "@remix-run/react";
+import { Form, json, MetaFunction, redirect, useActionData, useLoaderData } from "@remix-run/react";
 import { ReactLenis } from "@studio-freight/react-lenis";
 import { ChangeEvent, ChangeEventHandler, PointerEventHandler, useEffect, useState } from "react";
-import { GetItemsInCart, ModifyItemQuantity, Cart, GetTotalAndShipping, Item } from "../hooks/useCart";
+import { ModifyItemQuantity, Cart, Item } from "../hooks/useCart";
 
 export const meta: MetaFunction = () => {
     return [
         { title: "The Best Banana In The World" },
-        { name: "description", content: "Welcome!" },
+        { name: "description", content: "The Best Banana In The World" },
     ];
+};
+
+export const loader = async () => {
+    const apiUrl = process.env.API_URL;
+
+    return json({ apiUrl });
 };
 
 export async function action({ request }: { request: Request }) {
@@ -40,7 +46,7 @@ export async function action({ request }: { request: Request }) {
         status: 0,
     };
 
-    const response = await fetch('http://localhost:5066/api/SalesOrder', {
+    const response = await fetch(`${process.env.API_URL}/SalesOrder`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -71,6 +77,7 @@ export default function Index() {
         phone: "",
         email: ""
     });
+    const { apiUrl } = useLoaderData<ApiUrlData>();
 
     function handleFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
         const { name, value } = e.target;
@@ -81,7 +88,7 @@ export default function Index() {
     }
 
     useEffect(() => {
-        fetch(`http://localhost:5066/api/Item`)
+        fetch(`${apiUrl}/Item`)
             .then((results) => {
                 return results.json();
             })
@@ -108,12 +115,7 @@ export default function Index() {
 
                 setCart(cart);
             })
-    }, []);
-
-    useEffect(() => {
-        const cartWithoutTotal = GetItemsInCart();
-        setCart(GetTotalAndShipping(cartWithoutTotal));
-    }, []);
+    }, [apiUrl]);
 
     function OnModifyQuantity(itemId: string, add: boolean) {
         const updatedCart = ModifyItemQuantity(cart!, itemId, add);
@@ -349,4 +351,8 @@ export interface CustomerDetails {
 
 interface ActionData {
     error?: string;
+}
+
+interface ApiUrlData {
+    apiUrl: string;
 }
