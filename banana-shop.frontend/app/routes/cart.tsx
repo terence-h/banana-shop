@@ -32,7 +32,7 @@ export async function action({ request }: { request: Request }) {
         apartment: formData.get("apartment") as string,
         city: formData.get("city") as string,
         state: formData.get("state") as string,
-        postcode: parseInt(formData.get("postcode")!.toString()),
+        postcode: parseInt(formData.get("postCode")!.toString()),
         phone: parseInt(formData.get("phone")!.toString()),
         email: formData.get("email")
     };
@@ -255,8 +255,8 @@ function CartForm({ cart, customerDetails, handleFormChange, actionData }: CartF
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="postcode" className="block text-base font-semibold text-white mix-blend-difference mb-2">Postal/Zip Code<span className="text-yellow-400">*</span></label>
-                        <input required type="number" name="postcode" id="postcode" placeholder="123456"
+                        <label htmlFor="postCode" className="block text-base font-semibold text-white mix-blend-difference mb-2">Postal/Zip Code<span className="text-yellow-400">*</span></label>
+                        <input required type="number" name="postCode" id="postCode" placeholder="123456"
                             value={customerDetails.postCode}
                             onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                             className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
