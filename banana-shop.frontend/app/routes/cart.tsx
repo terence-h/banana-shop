@@ -1,7 +1,7 @@
 import { MetaFunction } from "@remix-run/react";
 import { ReactLenis } from "@studio-freight/react-lenis";
-import { PointerEventHandler, useEffect, useState } from "react";
-import { GetItemsInCart, Item, ModifyItemQuantity, Cart, GetTotalAndShipping } from "~/hooks/useCart";
+import { FormEvent, PointerEventHandler, useEffect, useState } from "react";
+import { GetItemsInCart, ModifyItemQuantity, Cart, GetTotalAndShipping, Item } from "../hooks/useCart";
 
 export const meta: MetaFunction = () => {
     return [
@@ -12,11 +12,91 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
     const [cart, setCart] = useState<Cart>();
+    const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
+        name: "",
+        address: "",
+        apartment: "",
+        city: "",
+        state: "",
+        postcode: "",
+        phone: "",
+        email: ""
+    });
+
+    function handleFormChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+        const { name, value } = e.target;
+        setCustomerDetails(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
+    }
+
+    async function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+
+        const cartItems = Object.entries(cart!.items);
+        const items: { [key: string]: { quantity: number } } = {};
+
+        cartItems.forEach(([key, value]) => {
+            items[key] = { quantity: value.quantity }
+        });
+
+        const data = {
+            id: null,
+            items,
+            customerDetails,
+            status: 0
+        }
+
+        console.log(data);
+
+        await fetch('http://localhost:5066/api/SalesOrder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        }).then(resp => {
+            console.log(resp);
+        }).catch(e => {
+            console.log(e);
+        });
+    }
+
+    useEffect(() => {
+        fetch(`http://localhost:5066/api/Item`)
+            .then((results) => {
+                return results.json();
+            })
+            .then((data: Item[]) => {
+                const itemCart: { [key: string]: Item; } = {};
+
+                data.forEach(item => {
+                    const idStr = item.id.toString();
+                    itemCart[idStr] = {
+                        id: idStr,
+                        name: item.name,
+                        price: item.price,
+                        quantity: 0,
+                        maxQuantityPerOrder: item.maxQuantityPerOrder
+                    }
+                });
+
+                const cart: Cart = {
+                    items: itemCart,
+                    subtotal: 0,
+                    shipping: 0,
+                    total: 0
+                }
+
+                setCart(cart);
+            })
+    }, []);
 
     useEffect(() => {
         const cartWithoutTotal = GetItemsInCart();
         setCart(GetTotalAndShipping(cartWithoutTotal));
-    }, [])
+    }, []);
 
     function OnModifyQuantity(itemId: string, add: boolean) {
         const updatedCart = ModifyItemQuantity(cart!, itemId, add);
@@ -30,7 +110,6 @@ export default function Index() {
                     <div>
                         <div className="p-6 rounded-md">
                             <h2 className="text-2xl font-extrabold text-white mix-blend-difference">Your Cart</h2>
-
                             {cart && Object.values(cart.items).map(item => {
                                 const totalPrice = item.price * item.quantity;
                                 return (<CartItem
@@ -39,6 +118,7 @@ export default function Index() {
                                     name={item.name}
                                     price={totalPrice}
                                     quantity={item.quantity}
+                                    maxQuantityPerOrder={item.maxQuantityPerOrder}
                                     onAddQuantity={() => { OnModifyQuantity(item.id, true) }}
                                     onMinusQuantity={() => { OnModifyQuantity(item.id, false) }} />);
                             })}
@@ -52,7 +132,7 @@ export default function Index() {
                         </div> */}
                     </div>
                     {cart &&
-                        <CartForm cart={cart} />
+                        <CartForm cart={cart} customerDetails={customerDetails} handleFormSubmit={handleFormSubmit} handleFormChange={handleFormChange} />
                     }
                 </div>
             </div>
@@ -60,12 +140,12 @@ export default function Index() {
     );
 }
 
-function CartItem({ id, name, price, quantity, onAddQuantity, onMinusQuantity }: CartItemProps) {
+function CartItem({ id, name, price, quantity, maxQuantityPerOrder, onAddQuantity, onMinusQuantity }: CartItemProps) {
     return (
         <div className="space-y-4 mt-8">
             <div className="flex items-center gap-4">
                 <div className="w-24 h-24 shrink-0 p-2 rounded-md">
-                    <img src={`items/${id}.png`} className="w-full h-full object-contain" alt="Product Item" />
+                    <img src={`items/item-0000${id}.png`} className="w-full h-full object-contain" alt={`Product Item ${id}`} />
                 </div>
 
                 <div className="w-full">
@@ -84,7 +164,8 @@ function CartItem({ id, name, price, quantity, onAddQuantity, onMinusQuantity }:
                             </button>
                             <span className="mx-5">{quantity}</span>
                             <button type="button"
-                                onPointerDown={onAddQuantity}
+                                onPointerDown={(e) => quantity < maxQuantityPerOrder && onAddQuantity(e)}
+                                disabled={quantity === maxQuantityPerOrder}
                                 className="px-3 py-3 border border-gray-300 text-white disabled:border-gray-600 disabled:text-gray-600 mix-blend-difference text-xs outline-none bg-transparent rounded-md">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 fill-current" viewBox="0 0 42 42">
                                     <path d="M37.059 16H26V4.941C26 2.224 23.718 0 21 0s-5 2.224-5 4.941V16H4.941C2.224 16 0 18.282 0 21s2.224 5 4.941 5H16v11.059C16 39.776 18.282 42 21 42s5-2.224 5-4.941V26h11.059C39.776 26 42 23.718 42 21s-2.224-5-4.941-5z" data-original="#000000"></path>
@@ -107,18 +188,83 @@ function CartItem({ id, name, price, quantity, onAddQuantity, onMinusQuantity }:
     );
 }
 
-function CartForm({ cart }: CartFormProps) {
+function CartForm({ cart, customerDetails, handleFormSubmit, handleFormChange }: CartFormProps) {
     return (
-        <form>
+        <form onSubmit={handleFormSubmit}>
             <h2 className="text-2xl font-extrabold text-white mix-blend-difference ">Payment Details</h2>
             <div className="grid gap-4 mt-8">
                 <div>
-                    <label htmlFor="name" className="block text-base font-semibold text-white mix-blend-difference mb-2">Card Holder Name</label>
-                    <input required type="text" name="name" id="name" autoComplete="name" placeholder="John Doe" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                    <label htmlFor="name" className="block text-base font-semibold text-white mix-blend-difference mb-2">Name<span className="text-yellow-400">*</span></label>
+                    <input required type="text" name="name" id="name" autoComplete="name" placeholder="John Doe"
+                        value={customerDetails.name}
+                        onChange={handleFormChange}
+                        className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                </div>
+                <div>
+                    <label htmlFor="address" className="block text-base font-semibold text-white mix-blend-difference mb-2">Address<span className="text-yellow-400">*</span></label>
+                    <textarea required name="address" id="address" rows={4} autoComplete="address-line1" placeholder="Blk 123 Eunos St 45"
+                        value={customerDetails.address}
+                        onChange={handleFormChange}
+                        className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                </div>
+                <div>
+                    <label htmlFor="apartment" className="block text-base font-semibold text-white mix-blend-difference mb-2">Apartment No.</label>
+                    <input type="text" name="apartment" id="apartment" autoComplete="address-line2" placeholder="#02-345"
+                        value={customerDetails.apartment}
+                        onChange={handleFormChange}
+                        className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="city" className="block text-base font-semibold text-white mix-blend-difference mb-2">City</label>
+                        <input type="text" name="city" id="city" placeholder="Los Angeles"
+                            value={customerDetails.city}
+                            onChange={handleFormChange}
+                            className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                    </div>
+                    <div>
+                        <label htmlFor="state" className="block text-base font-semibold text-white mix-blend-difference mb-2">State</label>
+                        <input type="text" name="state" id="state" placeholder="California"
+                            value={customerDetails.state}
+                            onChange={handleFormChange}
+                            className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="postcode" className="block text-base font-semibold text-white mix-blend-difference mb-2">Postal/Zip Code<span className="text-yellow-400">*</span></label>
+                        <input required type="number" name="postcode" id="postcode" placeholder="123456"
+                            value={customerDetails.postcode}
+                            onChange={handleFormChange}
+                            className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                    </div>
+                    <div>
+                        <label htmlFor="phone" className="block text-base font-semibold text-white mix-blend-difference mb-2">Phone No.<span className="text-yellow-400">*</span></label>
+                        <input required type="number" name="phone" id="phone" placeholder="83457645"
+                            value={customerDetails.phone}
+                            onChange={handleFormChange}
+                            className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                    </div>
                 </div>
 
                 <div>
-                    <label htmlFor="cardNumber" className="block text-base font-semibold text-white mix-blend-difference mb-2">Card Number</label>
+                    <label htmlFor="email" className="block text-base font-semibold text-white mix-blend-difference mb-2">E-mail<span className="text-yellow-400">*</span></label>
+                    <input required type="email" name="email" id="email" placeholder="johndoe@gmail.com"
+                        value={customerDetails.email}
+                        onChange={handleFormChange}
+                        className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                </div>
+
+                <br />
+
+                <div>
+                    <label htmlFor="cardName" className="block text-base font-semibold text-white mix-blend-difference mb-2">Card Holder Name<span className="text-yellow-400">*</span></label>
+                    <input required type="text" name="cardName" id="cardName" autoComplete="name" placeholder="John Doe" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                </div>
+
+                <div>
+                    <label htmlFor="cardNumber" className="block text-base font-semibold text-white mix-blend-difference mb-2">Card Number<span className="text-yellow-400">*</span></label>
                     <div className="flex bg-transparent border border-gray-300 rounded-md focus-within:border-yellow-400 overflow-hidden">
                         <input required type="number" name="cardNumber" id="cardNumber" autoComplete="cc-number" placeholder="1234 5678 9012 3456" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
@@ -126,12 +272,12 @@ function CartForm({ cart }: CartFormProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="expiryDate" className="block text-base font-semibold text-white mix-blend-difference mb-2">Expiry Date</label>
+                        <label htmlFor="expiryDate" className="block text-base font-semibold text-white mix-blend-difference mb-2">Expiry Date<span className="text-yellow-400">*</span></label>
                         <input required type="number" name="expiryDate" id="expiryDate" autoComplete="cc-exp" placeholder="09/29" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
 
                     <div>
-                        <label htmlFor="cvv" className="block text-base font-semibold text-white mix-blend-difference mb-2">CVV</label>
+                        <label htmlFor="cvv" className="block text-base font-semibold text-white mix-blend-difference mb-2">CVV<span className="text-yellow-400">*</span></label>
                         <input required type="number" name="cvv" id="cvv" placeholder="123" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
                 </div>
@@ -146,7 +292,13 @@ function CartForm({ cart }: CartFormProps) {
                 <li className="flex flex-wrap gap-4 text-sm font-bold">Total <span className="ml-auto">${cart.total.toFixed(2) ?? 0}</span></li>
             </ul>
 
-            <button type="button" className="mt-8 text-sm px-4 py-3 w-full font-semibold tracking-wide bg-yellow-400 text-white rounded-md"><span className="mix-blend-difference">Make Payment</span></button>
+            <button type="submit"
+                className="mt-8 text-sm px-4 py-3 w-full font-semibold tracking-wide bg-yellow-400 text-white rounded-md disabled:bg-gray-800"
+                // onPointerDown={(e) => cart.subtotal > 0 && OnSubmit(e)}
+                disabled={cart.subtotal == 0}
+            >
+                <span className="mix-blend-difference">Make Payment</span>
+            </button>
         </form>
     );
 }
@@ -158,4 +310,18 @@ interface CartItemProps extends Item {
 
 interface CartFormProps {
     cart: Cart;
+    customerDetails: CustomerDetails;
+    handleFormSubmit: any;
+    handleFormChange: any;
+}
+
+interface CustomerDetails {
+    name: string;
+    address: string;
+    apartment?: string;
+    city?: string;
+    state?: string;
+    postcode: string;
+    phone: string;
+    email: string;
 }

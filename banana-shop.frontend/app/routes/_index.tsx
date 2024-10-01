@@ -1,11 +1,11 @@
 import type { MetaFunction } from "@remix-run/node";
 import { ReactLenis } from "@studio-freight/react-lenis";
-import CartButton from "~/components/cart-button";
-import Contact from "~/components/contact";
-import Details from "~/components/details";
-import Navbar from "~/components/navbar";
-import Overview from "~/components/overview";
-import useMobile from "~/hooks/useMobile";
+import CartButton from "../components/cart-button";
+import Contact from "../components/contact";
+import Details from "../components/details";
+import Navbar from "../components/navbar";
+import Overview from "../components/overview";
+import useMobile from "../hooks/useMobile";
 
 export const meta: MetaFunction = () => {
   return [

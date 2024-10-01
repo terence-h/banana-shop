@@ -41,7 +41,6 @@ export function ModifyItemQuantity(cart: Cart, itemId: string, add: boolean): Ca
     }
     updatedCart = GetTotalAndShipping(updatedCart);
     SetCartLocalStorage(updatedCart);
-    console.log(updatedCart);
     return updatedCart;
 }
 
@@ -54,6 +53,7 @@ export interface Item {
     name: string;
     price: number;
     quantity: number;
+    maxQuantityPerOrder: number;
 }
 
 export interface Cart {
