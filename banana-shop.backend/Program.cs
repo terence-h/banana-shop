@@ -9,6 +9,19 @@ builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("Mo
 builder.Services.AddScoped<ISalesOrderService, SalesOrderService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 
+string corsName = "Default";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: corsName,
+                    policy =>
+                    {
+                        policy.WithOrigins("*")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                    });
+});
+
 builder.Services.AddControllers();
 
 builder.Services.AddRazorPages();  // Razor Pages
@@ -28,6 +41,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCors(corsName);
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
