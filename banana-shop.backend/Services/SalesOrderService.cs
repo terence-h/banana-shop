@@ -61,8 +61,27 @@ public class SalesOrderService : ISalesOrderService
         return await salesOrderCollection.Find(new BsonDocument()).ToListAsync();
     }
 
-    public Task<ObjectId> UpdateSalesOrderAsync(string id, SalesOrder salesOrder)
+    public async Task<string> UpdateSalesOrderAsync(string id, SalesOrder salesOrder)
     {
-        throw new NotImplementedException();
+        if (ObjectId.TryParse(id, out ObjectId objectId))
+        {
+            var filter = Builders<SalesOrder>.Filter.Eq("_id", objectId);
+            var result = await salesOrderCollection.ReplaceOneAsync(filter, salesOrder);
+
+            if (result.MatchedCount == 0)
+            {
+                throw new InvalidOperationException($"No documents matched the filter in the database. Object ID: {id}");
+            }
+            else if (result.ModifiedCount == 0)
+            {
+                throw new InvalidOperationException($"Document replaced failed. Object ID: {id}");
+            }
+            
+            return id;
+        }
+        else
+        {
+            throw new FormatException("The provided ID is not a valid ObjectId.");
+        }
     }
 }

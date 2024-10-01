@@ -25,4 +25,10 @@ public class SalesOrderController(ISalesOrderService salesOrderService) : Contro
     {
         return await salesOrderService.CreateSalesOrderAsync(salesOrder);
     }
+
+    [HttpPut("{id}")]
+    public async Task<string> UpdateSalesOrder(string id, [FromBody] SalesOrder salesOrder)
+    {
+        return await salesOrderService.UpdateSalesOrderAsync(id, salesOrder);
+    }
 }
