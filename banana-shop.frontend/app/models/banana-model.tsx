@@ -7,7 +7,7 @@ Source: https://sketchfab.com/3d-models/banana-skin-in-substance-painter-b0d1aa5
 Title: Banana Skin in Substance Painter
 */
 import { useGLTF } from '@react-three/drei'
-import bananaScene from '~/3d/banana-model.glb';
+import bananaScene from '../3d/banana-model.glb';
 
 export default function BananaModel({ ...props }: BananaModelProps) {
   const { nodes, materials } = useGLTF(bananaScene);

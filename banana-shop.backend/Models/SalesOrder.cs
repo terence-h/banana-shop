@@ -15,6 +15,12 @@ public class SalesOrder
     [BsonElement("customerDetails")]
     public required CustomerDetailsModel CustomerDetails { get; set; }
 
+    [BsonElement("subtotal")]
+    public required double Subtotal { get; set; }
+
+    [BsonElement("shippingCost")]
+    public required double ShippingCost { get; set; }
+
     [BsonElement("status")]
     public int Status { get; set; }
 

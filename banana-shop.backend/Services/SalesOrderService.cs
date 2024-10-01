@@ -16,7 +16,6 @@ public class SalesOrderService : ISalesOrderService
         MongoClient client = new(mongoDBSettings.Value.ConnectionURI);
         IMongoDatabase database = client.GetDatabase(mongoDBSettings.Value.DatabaseName);
         salesOrderCollection = database.GetCollection<SalesOrder>(mongoDBSettings.Value.CollectionName["sales_order"]);
-        // itemsCollection = database.GetCollection<Item>(mongoDBSettings.Value.CollectionName["items"]);
         this.itemService = itemService;
     }
 
