@@ -3,7 +3,7 @@ import Section from "./section";
 import { OrbitControls, Html } from "@react-three/drei";
 import { PropsWithChildren, Suspense, useState } from 'react';
 import { easeInOut, motion } from 'framer-motion';
-import BananaModel from "~/models/banana-model";
+import BananaModel from "../models/banana-model";
 
 export default function Overview({ className, isMobile }: OverviewProps) {
     const [animationId, setAnimationId] = useState(0);

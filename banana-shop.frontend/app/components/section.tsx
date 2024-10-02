@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { CSSProperties, PropsWithChildren, useRef } from "react";
-import { ModifyClassName } from "~/utils/Helper";
+import { ModifyClassName } from "../utils/Helper";
 
 export default function Section({ children, sectionId, className, style }: SectionProps) {
     let sectionClassName = "";

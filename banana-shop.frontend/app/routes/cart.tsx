@@ -1,13 +1,19 @@
-import { Form, MetaFunction, redirect, useActionData } from "@remix-run/react";
+import { Form, json, MetaFunction, redirect, useActionData, useLoaderData } from "@remix-run/react";
 import { ReactLenis } from "@studio-freight/react-lenis";
 import { ChangeEvent, ChangeEventHandler, PointerEventHandler, useEffect, useState } from "react";
-import { GetItemsInCart, ModifyItemQuantity, Cart, GetTotalAndShipping, Item } from "../hooks/useCart";
+import { ModifyItemQuantity, Cart, Item } from "../hooks/useCart";
 
 export const meta: MetaFunction = () => {
     return [
         { title: "The Best Banana In The World" },
-        { name: "description", content: "Welcome!" },
+        { name: "description", content: "The Best Banana In The World" },
     ];
+};
+
+export const loader = async () => {
+    const apiUrl = process.env.API_URL;
+
+    return json({ apiUrl });
 };
 
 export async function action({ request }: { request: Request }) {
@@ -26,7 +32,7 @@ export async function action({ request }: { request: Request }) {
         apartment: formData.get("apartment") as string,
         city: formData.get("city") as string,
         state: formData.get("state") as string,
-        postcode: parseInt(formData.get("postcode")!.toString()),
+        postcode: parseInt(formData.get("postCode")!.toString()),
         phone: parseInt(formData.get("phone")!.toString()),
         email: formData.get("email")
     };
@@ -40,7 +46,7 @@ export async function action({ request }: { request: Request }) {
         status: 0,
     };
 
-    const response = await fetch('http://localhost:5066/api/SalesOrder', {
+    const response = await fetch(`${process.env.API_URL}/SalesOrder`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -71,6 +77,7 @@ export default function Index() {
         phone: "",
         email: ""
     });
+    const { apiUrl } = useLoaderData<ApiUrlData>();
 
     function handleFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
         const { name, value } = e.target;
@@ -81,7 +88,7 @@ export default function Index() {
     }
 
     useEffect(() => {
-        fetch(`http://localhost:5066/api/Item`)
+        fetch(`${apiUrl}/Item`)
             .then((results) => {
                 return results.json();
             })
@@ -108,12 +115,7 @@ export default function Index() {
 
                 setCart(cart);
             })
-    }, []);
-
-    useEffect(() => {
-        const cartWithoutTotal = GetItemsInCart();
-        setCart(GetTotalAndShipping(cartWithoutTotal));
-    }, []);
+    }, [apiUrl]);
 
     function OnModifyQuantity(itemId: string, add: boolean) {
         const updatedCart = ModifyItemQuantity(cart!, itemId, add);
@@ -253,8 +255,8 @@ function CartForm({ cart, customerDetails, handleFormChange, actionData }: CartF
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="postcode" className="block text-base font-semibold text-white mix-blend-difference mb-2">Postal/Zip Code<span className="text-yellow-400">*</span></label>
-                        <input required type="number" name="postcode" id="postcode" placeholder="123456"
+                        <label htmlFor="postCode" className="block text-base font-semibold text-white mix-blend-difference mb-2">Postal/Zip Code<span className="text-yellow-400">*</span></label>
+                        <input required type="number" name="postCode" id="postCode" placeholder="123456"
                             value={customerDetails.postCode}
                             onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                             className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
@@ -349,4 +351,8 @@ export interface CustomerDetails {
 
 interface ActionData {
     error?: string;
+}
+
+interface ApiUrlData {
+    apiUrl: string;
 }

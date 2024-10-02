@@ -1,6 +1,6 @@
 import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import { motion } from 'framer-motion';
-import useMobile from "~/hooks/useMobile";
+import useMobile from "../hooks/useMobile";
 import { useLenis } from "@studio-freight/react-lenis";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { useNavigate } from "@remix-run/react";

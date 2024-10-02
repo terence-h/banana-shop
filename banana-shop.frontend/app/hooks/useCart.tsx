@@ -1,22 +1,3 @@
-import defaultCart from '../data/default-cart.json';
-
-export function GetItemsInCart(): Cart {
-    const cartString = localStorage.getItem('cart');
-    const cart: Cart = cartString ? JSON.parse(cartString) : defaultCart;
-    return cart;
-}
-
-export function GetItemsCount(): number {
-    const cart = GetItemsInCart();
-    let totalCount = 0;
-
-    for (const item of Object.values(cart.items)) {
-        totalCount += item.quantity;
-    }
-
-    return totalCount;
-}
-
 export function GetTotalAndShipping(cart: Cart): Cart {
     const updatedCart = { ...cart };
     let totalQuantity = 0;
@@ -40,12 +21,7 @@ export function ModifyItemQuantity(cart: Cart, itemId: string, add: boolean): Ca
         add ? updatedCart.items[itemId].quantity++ : updatedCart.items[itemId].quantity--;
     }
     updatedCart = GetTotalAndShipping(updatedCart);
-    SetCartLocalStorage(updatedCart);
     return updatedCart;
-}
-
-function SetCartLocalStorage(cartString: Cart) {
-    localStorage.setItem('cart', JSON.stringify(cartString));
 }
 
 export interface Item {
