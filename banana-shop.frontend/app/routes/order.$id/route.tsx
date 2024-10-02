@@ -29,6 +29,7 @@ export default function Index() {
             <p>Apartment: {order.customerDetails.apartment!.length == 0 ? "-" : order.customerDetails.apartment}</p>
             <p>City: {order.customerDetails.city!.length == 0 ? "-" : order.customerDetails.city}</p>
             <p>State: {order.customerDetails.state!.length == 0 ? "-" : order.customerDetails.state}</p>
+            <p>Country: {order.customerDetails.country}</p>
             <p>Postal/Zip Code: {order.customerDetails.postCode}</p>
             <p>Phone: {order.customerDetails.phone}</p>
             <p>E-mail: {order.customerDetails.email}</p>
