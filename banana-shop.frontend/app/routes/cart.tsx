@@ -2,6 +2,7 @@ import { Form, json, MetaFunction, redirect, useActionData, useLoaderData } from
 import { ReactLenis } from "@studio-freight/react-lenis";
 import { ChangeEvent, ChangeEventHandler, PointerEventHandler, useEffect, useState } from "react";
 import { ModifyItemQuantity, Cart, Item } from "../hooks/useCart";
+import Countries from "../data/countries.json";
 
 export const meta: MetaFunction = () => {
     return [
@@ -32,6 +33,7 @@ export async function action({ request }: { request: Request }) {
         apartment: formData.get("apartment") as string,
         city: formData.get("city") as string,
         state: formData.get("state") as string,
+        country: formData.get("country") as string,
         postcode: parseInt(formData.get("postCode")!.toString()),
         phone: parseInt(formData.get("phone")!.toString()),
         email: formData.get("email")
@@ -73,13 +75,14 @@ export default function Index() {
         apartment: "",
         city: "",
         state: "",
+        country: "",
         postCode: "",
         phone: "",
         email: ""
     });
     const { apiUrl } = useLoaderData<ApiUrlData>();
 
-    function handleFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    function handleFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
         const { name, value } = e.target;
         setCustomerDetails(prevState => ({
             ...prevState,
@@ -208,6 +211,22 @@ function CartItem({ id, name, price, quantity, maxQuantityPerOrder, onAddQuantit
 }
 
 function CartForm({ cart, customerDetails, handleFormChange, actionData }: CartFormProps) { // handleFormSubmit
+    const [minMonth, setMinMonth] = useState('');
+
+    useEffect(() => {
+        const today = new Date();
+        let year = today.getFullYear();
+        let month = today.getMonth() + 1; // 2 for next month
+
+        if (month > 12) {
+            month = 1;
+            year++;
+        }
+
+        const formattedMonth = `${year}-${String(month).padStart(2, '0')}`;
+        setMinMonth(formattedMonth);
+    }, []);
+
     return (
         <Form method="post">
             <input required type="hidden" name="items" id="items" value={JSON.stringify(cart.items)} />
@@ -255,27 +274,40 @@ function CartForm({ cart, customerDetails, handleFormChange, actionData }: CartF
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
+                        <label htmlFor="country" className="block text-base font-semibold text-white mix-blend-difference mb-2">Country<span className="text-yellow-400">*</span></label>
+                        <select id="country" name="country" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6"
+                            value={customerDetails.country}
+                            onChange={handleFormChange as ChangeEventHandler<HTMLSelectElement>}>
+                            <option>Choose a country</option>
+                            {Object.entries(Countries).map(([key, value]) => {
+                                return <option key={key} value={value}>{key}</option>
+                            })}
+                        </select>
+                    </div>
+                    <div>
                         <label htmlFor="postCode" className="block text-base font-semibold text-white mix-blend-difference mb-2">Postal/Zip Code<span className="text-yellow-400">*</span></label>
                         <input required type="number" name="postCode" id="postCode" placeholder="123456"
                             value={customerDetails.postCode}
                             onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                             className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="phone" className="block text-base font-semibold text-white mix-blend-difference mb-2">Phone No.<span className="text-yellow-400">*</span></label>
-                        <input required type="number" name="phone" id="phone" placeholder="83457645"
+                        <input required type="tel" inputMode="numeric" name="phone" id="phone" pattern="\d*" placeholder="83457645"
                             value={customerDetails.phone}
                             onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
                             className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
-                </div>
-
-                <div>
-                    <label htmlFor="email" className="block text-base font-semibold text-white mix-blend-difference mb-2">E-mail<span className="text-yellow-400">*</span></label>
-                    <input required type="email" name="email" id="email" placeholder="johndoe@gmail.com"
-                        value={customerDetails.email}
-                        onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
-                        className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                    <div>
+                        <label htmlFor="email" className="block text-base font-semibold text-white mix-blend-difference mb-2">E-mail<span className="text-yellow-400">*</span></label>
+                        <input required type="email" name="email" id="email" placeholder="johndoe@gmail.com"
+                            value={customerDetails.email}
+                            onChange={handleFormChange as ChangeEventHandler<HTMLInputElement>}
+                            className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                    </div>
                 </div>
 
                 <br />
@@ -288,14 +320,14 @@ function CartForm({ cart, customerDetails, handleFormChange, actionData }: CartF
                 <div>
                     <label htmlFor="cardNumber" className="block text-base font-semibold text-white mix-blend-difference mb-2">Card Number<span className="text-yellow-400">*</span></label>
                     <div className="flex bg-transparent border border-gray-300 rounded-md focus-within:border-yellow-400 overflow-hidden">
-                        <input required type="number" name="cardNumber" id="cardNumber" autoComplete="cc-number" placeholder="1234 5678 9012 3456" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                        <input required type="tel" inputMode="numeric" name="cardNumber" id="cardNumber" autoComplete="cc-number" pattern="[0-9]{13,19}" maxLength={19} placeholder="1234567890123456" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="expiryDate" className="block text-base font-semibold text-white mix-blend-difference mb-2">Expiry Date<span className="text-yellow-400">*</span></label>
-                        <input required type="number" name="expiryDate" id="expiryDate" autoComplete="cc-exp" placeholder="09/29" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
+                        <input required type="month" min={minMonth} name="expiryDate" id="expiryDate" autoComplete="cc-exp" placeholder="09/29" className="block w-full rounded-md border-0 px-3.5 py-2 text-white bg-gray-950 mix-blend-difference shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-yellow-400 md:text-sm md:leading-6" />
                     </div>
 
                     <div>
@@ -334,7 +366,7 @@ interface CartItemProps extends Item {
 interface CartFormProps {
     cart: Cart;
     customerDetails: CustomerDetails;
-    handleFormChange: ChangeEventHandler<HTMLInputElement> | ChangeEventHandler<HTMLTextAreaElement>;
+    handleFormChange: ChangeEventHandler<HTMLInputElement> | ChangeEventHandler<HTMLTextAreaElement> | ChangeEventHandler<HTMLSelectElement>;
     actionData: ActionData | undefined;
 }
 
@@ -344,6 +376,7 @@ export interface CustomerDetails {
     apartment?: string;
     city?: string;
     state?: string;
+    country: string;
     postCode: string;
     phone: string;
     email: string;

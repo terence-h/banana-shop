@@ -50,8 +50,11 @@ public class SalesOrder
         [BsonElement("state")]
         public string? State { get; set; }
 
+        [BsonElement("country")]
+        public required string Country { get; set; }
+
         [BsonElement("postcode")]
-        public int PostCode { get; set; }
+        public required int PostCode { get; set; }
 
         [BsonElement("phone")]
         public required int Phone { get; set; }

@@ -10,7 +10,7 @@ import useMobile from "../hooks/useMobile";
 export const meta: MetaFunction = () => {
   return [
     { title: "The Best Banana In The World" },
-    { name: "description", content: "Welcome!" },
+    { name: "description", content: "The Best Banana In The World" },
   ];
 };
 
@@ -30,7 +30,7 @@ export default function Index() {
         </main>
       </ReactLenis>
       <footer>
-        <CartButton isMobile={isMobile}>Test</CartButton>
+        <CartButton isMobile={isMobile} />
       </footer>
     </>
   );
