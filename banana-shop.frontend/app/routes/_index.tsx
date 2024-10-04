@@ -1,4 +1,4 @@
-import type { MetaFunction } from "@remix-run/node";
+import { json, type MetaFunction } from "@remix-run/node";
 import { ReactLenis } from "@studio-freight/react-lenis";
 import CartButton from "../components/cart-button";
 import Contact from "../components/contact";
@@ -6,6 +6,7 @@ import Details from "../components/details";
 import Navbar from "../components/navbar";
 import Overview from "../components/overview";
 import useMobile from "../hooks/useMobile";
+import { useLoaderData } from "@remix-run/react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -14,8 +15,14 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export function loader() {
+  const apiUrl = process.env.API_URL;
+  return json<ApiUrl>({ apiUrl });
+}
+
 export default function Index() {
   const isMobile = useMobile();
+  const { apiUrl } = useLoaderData<ApiUrl>();
 
   return (
     <>
@@ -26,7 +33,7 @@ export default function Index() {
         <main>
           <Overview className="h-screen w-full" isMobile={isMobile} />
           <Details className="relative h-[500vh] w-full" isMobile={isMobile} />
-          <Contact className="h-screen w-full mx-auto" />
+          <Contact className="h-screen w-full mx-auto" apiUrl={apiUrl} />
         </main>
       </ReactLenis>
       <footer>
@@ -34,4 +41,8 @@ export default function Index() {
       </footer>
     </>
   );
+}
+
+export interface ApiUrl {
+  apiUrl: string;
 }

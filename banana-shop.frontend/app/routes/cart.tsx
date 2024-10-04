@@ -3,6 +3,7 @@ import { ReactLenis } from "@studio-freight/react-lenis";
 import { ChangeEvent, ChangeEventHandler, PointerEventHandler, useEffect, useState } from "react";
 import { ModifyItemQuantity, Cart, Item } from "../hooks/useCart";
 import Countries from "../data/countries.json";
+import { ApiUrl } from "./_index";
 
 export const meta: MetaFunction = () => {
     return [
@@ -80,7 +81,7 @@ export default function Index() {
         phone: "",
         email: ""
     });
-    const { apiUrl } = useLoaderData<ApiUrlData>();
+    const { apiUrl } = useLoaderData<ApiUrl>();
 
     function handleFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
         const { name, value } = e.target;
@@ -171,7 +172,7 @@ function CartItem({ id, name, price, quantity, maxQuantityPerOrder, onAddQuantit
                 </div>
 
                 <div className="w-full">
-                    <h3 className="text-base emibold text-white mix-blend-difference">{name}</h3>
+                    <h3 className="text-base text-white mix-blend-difference">{name}</h3>
                     <h6 className="text-sm text-white mix-blend-difference font-bold cursor-pointer mt-0.5">${price.toFixed(2)}</h6>
 
                     <div className="flex gap-4 mt-4">
@@ -384,8 +385,4 @@ export interface CustomerDetails {
 
 interface ActionData {
     error?: string;
-}
-
-interface ApiUrlData {
-    apiUrl: string;
 }
