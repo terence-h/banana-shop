@@ -31,7 +31,6 @@ public class SalesOrderService : ISalesOrderService
         {
             var filter = Builders<SalesOrder>.Filter.Eq("_id", objectId);
             var salesOrder = await salesOrderCollection.Find(filter).FirstOrDefaultAsync();
-            // var items = await itemsCollection.Find(new BsonDocument()).ToListAsync();
             var items = await itemService.GetItemsAsync();
 
             if (salesOrder == null)
